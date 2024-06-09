@@ -22,6 +22,13 @@
       "when": 1717776574190,
       "tag": "0002_green_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1717850240883,
+      "tag": "0003_zippy_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }
