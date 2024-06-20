@@ -1,5 +1,5 @@
 import React from "react";
-import Header from "../../components/header";
+import Navbar from "../../components/navbar";
 
 type Props = {
   children: React.ReactNode;
@@ -7,7 +7,7 @@ type Props = {
 const DashboardLayout = ({ children }: Props) => {
   return (
     <div>
-      <Header />
+      <Navbar />
       <main className="px-3 lg:px-14">{children}</main>
     </div>
   );
