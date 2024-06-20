@@ -1,3 +1,4 @@
+"use client";
 import { UserButton, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
 import { HeaderLogo } from "./header-logo";
 import { Navigation } from "./navigation";
