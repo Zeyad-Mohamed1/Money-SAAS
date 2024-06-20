@@ -1,15 +1,16 @@
-import { UserButton, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
-import HeaderLogo from "./header-logo";
-import Navigation from "./navigation";
+import { UserButton, ClerkLoading, ClerkLoaded } from "@clerk/nextjs";
+import { HeaderLogo } from "./header-logo";
+import { Navigation } from "./navigation";
 import { Loader2 } from "lucide-react";
-import WelcomeMessage from "./WelcomeMessage";
+import { WelcomeMsg } from "./welcome-msg";
+import { Filters } from "./filters";
 
-const Header = () => {
+export const Header = () => {
   return (
-    <header className="bg-gradient-to-b from-blue-700 to-blue-500 px-4 py-8 lg:px-14 pb-36">
+    <header className="bg-gradient-to-b from-blue-700 to-blue-500 px-4 py-8 lg:px-4 pb-36">
       <div className="max-w-screen-2xl mx-auto">
         <div className="w-full flex items-center justify-between mb-14">
-          <div className="flex items-center lg:gap-x-16">
+          <div className="flex items-center lg:gap-x-6">
             <HeaderLogo />
             <Navigation />
           </div>
@@ -17,13 +18,12 @@ const Header = () => {
             <UserButton afterSignOutUrl="/" />
           </ClerkLoaded>
           <ClerkLoading>
-            <Loader2 className="animate-spin text-slate-400 size-8" />
+            <Loader2 className="size-8 animate-spin text-slate-800" />
           </ClerkLoading>
         </div>
-        <WelcomeMessage />
+        <WelcomeMsg />
+        <Filters />
       </div>
     </header>
   );
 };
-
-export default Header;

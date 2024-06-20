@@ -1,11 +1,12 @@
+import { z } from "zod";
 import { Hono } from "hono";
-import db from "@/db/drizzle";
 import { parse, subDays } from "date-fns";
 import { createId } from "@paralleldrive/cuid2";
+import { zValidator } from "@hono/zod-validator";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
-import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
+
+import { db } from "@/db/drizzle";
 import {
   transactions,
   insertTransactionSchema,
@@ -72,13 +73,19 @@ const app = new Hono()
   )
   .get(
     "/:id",
-    zValidator("param", z.object({ id: z.string().optional() })),
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().optional(),
+      })
+    ),
     clerkMiddleware(),
     async (c) => {
       const auth = getAuth(c);
-      const { id } = c.req.param();
+      const { id } = c.req.valid("param");
+
       if (!id) {
-        return c.json({ error: "Bad Request" }, 400);
+        return c.json({ error: "Missing id" }, 400);
       }
 
       if (!auth?.userId) {
@@ -93,13 +100,15 @@ const app = new Hono()
           payee: transactions.payee,
           amount: transactions.amount,
           notes: transactions.notes,
+          account: accounts.name,
           accountId: transactions.accountId,
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))
         .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)));
+
       if (!data) {
-        return c.json({ error: "Not Found" }, 404);
+        return c.json({ error: "Not found" }, 404);
       }
 
       return c.json({ data });
@@ -108,7 +117,12 @@ const app = new Hono()
   .post(
     "/",
     clerkMiddleware(),
-    zValidator("json", insertTransactionSchema.omit({ id: true })),
+    zValidator(
+      "json",
+      insertTransactionSchema.omit({
+        id: true,
+      })
+    ),
     async (c) => {
       const auth = getAuth(c);
       const values = c.req.valid("json");
@@ -119,7 +133,42 @@ const app = new Hono()
 
       const [data] = await db
         .insert(transactions)
-        .values({ id: createId(), ...values })
+        .values({
+          id: createId(),
+          ...values,
+        })
+        .returning();
+
+      return c.json({ data });
+    }
+  )
+  .post(
+    "/bulk-create",
+    clerkMiddleware(),
+    zValidator(
+      "json",
+      z.array(
+        insertTransactionSchema.omit({
+          id: true,
+        })
+      )
+    ),
+    async (c) => {
+      const auth = getAuth(c);
+      const values = c.req.valid("json");
+
+      if (!auth?.userId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const data = await db
+        .insert(transactions)
+        .values(
+          values.map((value) => ({
+            id: createId(),
+            ...value,
+          }))
+        )
         .returning();
 
       return c.json({ data });
@@ -144,9 +193,7 @@ const app = new Hono()
 
       const transactionsToDelete = db.$with("transactions_to_delete").as(
         db
-          .select({
-            id: transactions.id,
-          })
+          .select({ id: transactions.id })
           .from(transactions)
           .innerJoin(accounts, eq(transactions.accountId, accounts.id))
           .where(
@@ -157,7 +204,7 @@ const app = new Hono()
           )
       );
 
-      const data = await db
+      const [data] = await db
         .with(transactionsToDelete)
         .delete(transactions)
         .where(
@@ -176,14 +223,25 @@ const app = new Hono()
   .patch(
     "/:id",
     clerkMiddleware(),
-    zValidator("param", z.object({ id: z.string().optional() })),
-    zValidator("json", insertTransactionSchema.omit({ id: true })),
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().optional(),
+      })
+    ),
+    zValidator(
+      "json",
+      insertTransactionSchema.omit({
+        id: true,
+      })
+    ),
     async (c) => {
       const auth = getAuth(c);
       const { id } = c.req.valid("param");
       const values = c.req.valid("json");
+
       if (!id) {
-        return c.json({ error: "Bad Request" }, 400);
+        return c.json({ error: "Missing id" }, 400);
       }
 
       if (!auth?.userId) {
@@ -192,9 +250,7 @@ const app = new Hono()
 
       const transactionsToUpdate = db.$with("transactions_to_update").as(
         db
-          .select({
-            id: transactions.id,
-          })
+          .select({ id: transactions.id })
           .from(transactions)
           .innerJoin(accounts, eq(transactions.accountId, accounts.id))
           .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)))
@@ -213,7 +269,7 @@ const app = new Hono()
         .returning();
 
       if (!data) {
-        return c.json({ error: "Not Found" }, 404);
+        return c.json({ error: "Not found" }, 404);
       }
 
       return c.json({ data });
@@ -222,12 +278,18 @@ const app = new Hono()
   .delete(
     "/:id",
     clerkMiddleware(),
-    zValidator("param", z.object({ id: z.string().optional() })),
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().optional(),
+      })
+    ),
     async (c) => {
       const auth = getAuth(c);
       const { id } = c.req.valid("param");
+
       if (!id) {
-        return c.json({ error: "Bad Request" }, 400);
+        return c.json({ error: "Missing id" }, 400);
       }
 
       if (!auth?.userId) {
@@ -236,9 +298,7 @@ const app = new Hono()
 
       const transactionsToDelete = db.$with("transactions_to_delete").as(
         db
-          .select({
-            id: transactions.id,
-          })
+          .select({ id: transactions.id })
           .from(transactions)
           .innerJoin(accounts, eq(transactions.accountId, accounts.id))
           .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)))
@@ -258,7 +318,7 @@ const app = new Hono()
         });
 
       if (!data) {
-        return c.json({ error: "Not Found" }, 404);
+        return c.json({ error: "Not found" }, 404);
       }
 
       return c.json({ data });

@@ -45,7 +45,7 @@ export const useConfirm = (
           <DialogDescription>{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="pt-2">
-          <Button variant="outline" onClick={handleCancel}>
+          <Button onClick={handleCancel} variant="outline">
             Cancel
           </Button>
           <Button onClick={handleConfirm}>Confirm</Button>

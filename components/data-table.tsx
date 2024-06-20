@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash } from "lucide-react";
 import * as React from "react";
 import {
   ColumnDef,
@@ -14,9 +15,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
 import {
   Table,
   TableBody,
@@ -25,8 +23,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/hooks/use-confirm";
+import { Input } from "@/components/ui/input";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -75,7 +74,7 @@ export function DataTable<TData, TValue>({
       <ConfirmDialog />
       <div className="flex items-center py-4">
         <Input
-          placeholder={`Filters ${filterKey}...`}
+          placeholder={`Filter ${filterKey}...`}
           value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn(filterKey)?.setFilterValue(event.target.value)
@@ -84,20 +83,19 @@ export function DataTable<TData, TValue>({
         />
         {table.getFilteredSelectedRowModel().rows.length > 0 && (
           <Button
+            disabled={disabled}
+            size="sm"
+            variant="outline"
+            className="ml-auto font-normal text-xs"
             onClick={async () => {
               const ok = await confirm();
-
               if (ok) {
                 onDelete(table.getFilteredSelectedRowModel().rows);
                 table.resetRowSelection();
               }
             }}
-            disabled={disabled}
-            size={"sm"}
-            variant={"outline"}
-            className="ml-auto font-normal text-xs"
           >
-            <Trash className="mr-2 size-4" />
+            <Trash className="size-4 mr-2" />
             Delete ({table.getFilteredSelectedRowModel().rows.length})
           </Button>
         )}

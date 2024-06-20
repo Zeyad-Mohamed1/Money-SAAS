@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { string, z } from "zod";
 import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +21,7 @@ const formSchema = insertCategorySchema.pick({
 
 type FormValues = z.input<typeof formSchema>;
 
-type AccountFormProps = {
+type Props = {
   id?: string;
   defaultValues?: FormValues;
   onSubmit: (values: FormValues) => void;
@@ -35,16 +35,14 @@ export const CategoryForm = ({
   onSubmit,
   onDelete,
   disabled,
-}: AccountFormProps) => {
+}: Props) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
-
   const handleSubmit = (values: FormValues) => {
     onSubmit(values);
   };
-
   const handleDelete = () => {
     onDelete?.();
   };
@@ -55,25 +53,23 @@ export const CategoryForm = ({
         className="space-y-4 pt-4"
       >
         <FormField
-          control={form.control}
           name="name"
+          control={form.control}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="e.g. Groceries,Travel,etc."
                   disabled={disabled}
+                  placeholder="e.g. Food, Travel, etc."
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
-
         <Button className="w-full" disabled={disabled}>
-          {id ? "Save Changes" : "Create Category"}
+          {id ? "Save changes" : "Create category"}
         </Button>
         {!!id && (
           <Button
@@ -81,10 +77,11 @@ export const CategoryForm = ({
             disabled={disabled}
             onClick={handleDelete}
             className="w-full"
+            size="icon"
             variant="outline"
           >
-            <Trash className="mr-2 h-4 w-4" />
-            Delete Category
+            <Trash className="size-4 mr-2" />
+            Delete category
           </Button>
         )}
       </form>

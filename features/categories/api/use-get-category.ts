@@ -7,17 +7,15 @@ export const useGetCategory = (id?: string) => {
     enabled: !!id,
     queryKey: ["category", { id }],
     queryFn: async () => {
-      const response = await client.api.categories[":id"].$get({
+      const response = await client.api.categories[":id"]["$get"]({
         param: { id },
       });
       if (!response.ok) {
-        throw new Error("Failed to fetch category");
+        throw new Error("Faild to fetch category");
       }
-
       const { data } = await response.json();
       return data;
     },
   });
-
   return query;
 };

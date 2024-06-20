@@ -1,3 +1,14 @@
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
+
+import { useGetAccount } from "../api/use-get-account";
+import { useOpenAccount } from "../hooks/use-open-account";
+import { AccountForm } from "./account-form";
+import { useEditAccount } from "../api/use-edit-account";
+import { useDeleteAccount } from "../api/use-delete-account";
+
+import { useConfirm } from "@/hooks/use-confirm";
+import { insertAccountSchema } from "@/db/schema";
 import {
   Sheet,
   SheetContent,
@@ -5,15 +16,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useEditAccount } from "../api/use-edit-account";
-import { useDeleteAccount } from "../api/use-delete-account";
-import { AccountForm } from "./account-form";
-import { insertAccountSchema } from "@/db/schema";
-import { z } from "zod";
-import { useOpenAccount } from "../hooks/use-open-account";
-import { useGetAccount } from "../api/use-get-account";
-import { Loader2 } from "lucide-react";
-import { useConfirm } from "@/hooks/use-confirm";
 
 const formSchema = insertAccountSchema.pick({
   name: true,
@@ -21,18 +23,16 @@ const formSchema = insertAccountSchema.pick({
 
 type FormValues = z.input<typeof formSchema>;
 
-const EditAccountSheet = () => {
+export const EditAccountSheet = () => {
   const { isOpen, onClose, id } = useOpenAccount();
 
-  const [ConformDialog, confirm] = useConfirm(
-    "Are you sure ?",
-    "You are about to delete this account. This action cannot be undone."
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "You are about to delete this account."
   );
 
   const accountQuery = useGetAccount(id);
-
   const editMutation = useEditAccount(id);
-
   const deleteMutation = useDeleteAccount(id);
 
   const isPending = editMutation.isPending || deleteMutation.isPending;
@@ -47,9 +47,8 @@ const EditAccountSheet = () => {
     });
   };
 
-  const handleDelete = async () => {
+  const onDelete = async () => {
     const ok = await confirm();
-
     if (ok) {
       deleteMutation.mutate(undefined, {
         onSuccess: () => {
@@ -60,25 +59,21 @@ const EditAccountSheet = () => {
   };
 
   const defaultValues = accountQuery.data
-    ? {
-        name: accountQuery.data.name,
-      }
-    : {
-        name: "",
-      };
+    ? { name: accountQuery.data.name }
+    : { name: "" };
 
   return (
     <>
-      <ConformDialog />
+      <ConfirmDialog />
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent className="space-y-4">
           <SheetHeader>
             <SheetTitle>Edit Account</SheetTitle>
-            <SheetDescription>Edit an existing account.</SheetDescription>
+            <SheetDescription>Edit an existing account</SheetDescription>
           </SheetHeader>
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <Loader2 className="size-6 text-muted-foreground animate-spin" />
             </div>
           ) : (
             <AccountForm
@@ -86,7 +81,7 @@ const EditAccountSheet = () => {
               onSubmit={onSubmit}
               disabled={isPending}
               defaultValues={defaultValues}
-              onDelete={handleDelete}
+              onDelete={onDelete}
             />
           )}
         </SheetContent>
@@ -94,5 +89,3 @@ const EditAccountSheet = () => {
     </>
   );
 };
-
-export default EditAccountSheet;
